@@ -7,3 +7,33 @@
     @apply bg-gray-50 text-gray-900 font-sans;
   }
 }
+
+/* ── Keyframe Animations ── */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes float {
+  from { transform: translateY(0px); }
+  to   { transform: translateY(-8px); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+
+@keyframes pulse-ring {
+  0%   { transform: scale(1);   opacity: 0.6; }
+  100% { transform: scale(1.4); opacity: 0; }
+}
+
+/* ── Utility classes ── */
+.animate-fadeInUp {
+  animation: fadeInUp 0.7s ease both;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite alternate;
+}
