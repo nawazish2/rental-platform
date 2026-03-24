@@ -27,7 +27,14 @@ const moveInSchema = new mongoose.Schema(
         },
       ],
     },
-    moveInDate: { type: Date },
+    moveOut: {
+      status: { type: String, enum: ['none', 'requested', 'approved', 'rejected'], default: 'none' },
+      reason: { type: String, default: '' },
+      preferredDate: { type: Date },
+      requestedAt: { type: Date },
+      approvedAt: { type: Date },
+      notes: { type: String, default: '' },
+    },
     extensionRequests: [
       {
         requestedUntil: { type: Date, required: true },

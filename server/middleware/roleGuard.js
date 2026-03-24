@@ -9,3 +9,5 @@ const requireRole = (...roles) => {
 };
 
 module.exports = requireRole;
+
+module.exports.requireRole = requireRole;

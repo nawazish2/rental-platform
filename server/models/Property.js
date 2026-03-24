@@ -9,13 +9,14 @@ const propertySchema = new mongoose.Schema(
     price: { type: Number, required: true },
     type: {
       type: String,
-      enum: ['1BHK', '2BHK', '3BHK', 'Studio', 'Villa'],
+      enum: ['1BHK', '2BHK', '3BHK', 'Studio', 'Villa', 'Hostel', 'Airbnb'],
       required: true,
     },
     images: [{ type: String }],
     amenities: [{ type: String }],
     rules: [{ type: String }],
-    availableFrom: { type: Date, required: true },
+    availableFrom: { type: Date, required: false, default: Date.now },
+    blockedDates: [{ type: Date }],
     availabilityTimeline: [
       {
         date: Date,

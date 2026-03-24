@@ -171,4 +171,37 @@ router.put('/:id/extend/:extId', verifyToken, requireRole('admin'), async (req, 
   }
 });
 
+// POST /api/movein/:id/moveout-request (tenant)
+router.post('/:id/moveout-request', verifyToken, requireRole('tenant'), async (req, res) => {
+  try {
+    const { reason, preferredDate } = req.body;
+    const moveIn = await MoveIn.findOne({ _id: req.params.id, tenant: req.user._id });
+    if (!moveIn) return res.status(404).json({ message: 'Move-in not found' });
+    if (moveIn.moveOut?.status === 'requested') return res.status(400).json({ message: 'Move-out already requested' });
+    moveIn.moveOut = { status: 'requested', reason, preferredDate: new Date(preferredDate), requestedAt: new Date() };
+    await moveIn.save();
+    res.json({ moveIn });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// PUT /api/movein/:id/moveout-respond (admin approve/reject)
+router.put('/:id/moveout-respond', verifyToken, requireRole('admin'), async (req, res) => {
+  try {
+    const { status, notes } = req.body;
+    if (!['approved', 'rejected'].includes(status)) return res.status(400).json({ message: 'Invalid status' });
+    const moveIn = await MoveIn.findById(req.params.id);
+    if (!moveIn) return res.status(404).json({ message: 'Move-in not found' });
+    moveIn.moveOut.status = status;
+    moveIn.moveOut.approvedAt = new Date();
+    moveIn.moveOut.notes = notes || '';
+    if (status === 'approved') moveIn.status = 'completed';
+    await moveIn.save();
+    res.json({ moveIn });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 module.exports = router;

@@ -76,4 +76,17 @@ router.get('/movein', async (req, res) => {
   }
 });
 
+// GET /api/admin/moveout-requests
+router.get('/moveout-requests', async (req, res) => {
+  try {
+    const moveIns = await MoveIn.find({ 'moveOut.status': 'requested' })
+      .populate('property', 'title city')
+      .populate('tenant', 'name email phone')
+      .sort({ 'moveOut.requestedAt': -1 });
+    res.json({ moveIns });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 module.exports = router;

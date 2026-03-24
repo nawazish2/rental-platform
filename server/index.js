@@ -17,6 +17,9 @@ app.use('/api/shortlists', require('./routes/shortlists'));
 app.use('/api/movein', require('./routes/moveIn'));
 app.use('/api/support', require('./routes/support'));
 app.use('/api/admin', require('./routes/admin'));
+app.use('/api/reviews', require('./routes/reviews'));
+app.use('/api/notifications', require('./routes/notifications'));
+app.use('/api/payments', require('./routes/payments'));
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 

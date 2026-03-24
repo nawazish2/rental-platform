@@ -48,3 +48,16 @@ router.get('/me', verifyToken, (req, res) => {
 });
 
 module.exports = router;
+
+// PUT update profile
+const { uploadImages } = require('../utils/cloudinary');
+router.put('/profile', verifyToken, uploadImages.single('avatar'), async (req, res) => {
+  try {
+    const updates = {};
+    if (req.body.name) updates.name = req.body.name;
+    if (req.body.phone) updates.phone = req.body.phone;
+    if (req.file) updates.avatar = req.file.path;
+    const user = await User.findByIdAndUpdate(req.user.id, updates, { new: true }).select('-password');
+    res.json({ message: 'Profile updated', user });
+  } catch (e) { res.status(500).json({ message: e.message }); }
+});

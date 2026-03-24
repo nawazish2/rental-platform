@@ -16,7 +16,7 @@ export default function Register() {
     setLoading(true);
     try {
       const user = await register(form);
-      navigate(user.role === 'admin' ? '/admin' : '/dashboard');
+      navigate(user.role === 'admin' ? '/admin' : user.role === 'owner' ? '/owner' : '/dashboard');
     } catch (err) {
       setError(err.response?.data?.message || 'Registration failed');
     } finally {
@@ -77,7 +77,7 @@ export default function Register() {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">I am a</label>
             <div className="flex gap-3">
-              {['tenant', 'admin'].map((r) => (
+              {['tenant', 'owner'].map((r) => (
                 <button
                   key={r} type="button"
                   onClick={() => setForm({ ...form, role: r })}
@@ -85,7 +85,7 @@ export default function Register() {
                     form.role === r ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-gray-200 text-gray-500 hover:border-gray-300'
                   }`}
                 >
-                  {r === 'tenant' ? '🏠 Tenant' : '⚙️ Admin'}
+                  {r === 'tenant' ? '🏠 Tenant' : '🏢 Property Owner'}
                 </button>
               ))}
             </div>

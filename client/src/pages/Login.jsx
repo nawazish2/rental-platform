@@ -34,7 +34,7 @@ export default function Login() {
         {error && <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 mb-4 text-sm">{error}</div>}
         <div className="mb-4 p-3 bg-blue-50 border border-blue-100 rounded-lg text-xs text-blue-700">
           <p><strong>Demo:</strong> tenant@demo.com / demo123</p>
-          <p><strong>Admin:</strong> admin@demo.com / demo123</p>
+          <p><strong>Admin:</strong> nawazish@gmail.com / admin@macbook</p>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>

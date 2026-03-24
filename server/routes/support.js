@@ -1,7 +1,8 @@
 const router = require('express').Router();
 const SupportTicket = require('../models/SupportTicket');
-const verifyToken = require('../middleware/auth');
-const requireRole = require('../middleware/roleGuard');
+const { verifyToken } = require('../middleware/auth');
+const { requireRole } = require('../middleware/roleGuard');
+const { createNotification } = require('./notifications');
 
 // POST /api/support - create ticket
 router.post('/', verifyToken, requireRole('tenant'), async (req, res) => {
@@ -81,6 +82,10 @@ router.post('/:id/message', verifyToken, async (req, res) => {
     if (ticket.status === 'open' && req.user.role === 'admin') ticket.status = 'in_progress';
     await ticket.save();
     await ticket.populate('messages.sender', 'name role');
+    // Notify the other party
+    if (req.user.role === 'admin') {
+      await createNotification(ticket.raisedBy, 'ticket_reply', 'Support Reply 💬', `Admin replied to your ticket: "${ticket.subject}"`, '/support');
+    }
     res.json({ ticket });
   } catch (err) {
     res.status(500).json({ message: err.message });
