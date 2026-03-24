@@ -53,10 +53,10 @@ function useCounter(end, duration = 1800, start = false) {
 function StatCard({ end, suffix, label, icon, started }) {
   const count = useCounter(end, 1600, started);
   return (
-    <div className="text-center p-6 rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300">
+    <div className="text-center p-6 rounded-2xl bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300">
       <div className="text-3xl mb-2">{icon}</div>
-      <div className="text-4xl font-extrabold text-blue-700">{count}{suffix}</div>
-      <div className="text-sm text-gray-500 mt-1 font-medium">{label}</div>
+      <div className="text-4xl font-extrabold text-blue-700 dark:text-blue-400">{count}{suffix}</div>
+      <div className="text-sm text-gray-500 dark:text-gray-400 mt-1 font-medium">{label}</div>
     </div>
   );
 }
@@ -154,7 +154,7 @@ export default function Landing() {
       </section>
 
       {/* ── STATS ── */}
-      <section className="bg-white py-16 px-6" ref={statsRef}>
+      <section className="bg-white dark:bg-slate-900 py-16 px-6 transition-colors duration-300" ref={statsRef}>
         <div className="max-w-5xl mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {STATS.map((s, i) => (
@@ -168,24 +168,24 @@ export default function Landing() {
       </section>
 
       {/* ── HOW IT WORKS ── */}
-      <section className="bg-gradient-to-b from-blue-50 to-white py-20 px-6" ref={stepsRef}>
+      <section className="bg-gradient-to-b from-blue-50 to-white dark:from-slate-800 dark:to-slate-900 py-20 px-6 transition-colors duration-300" ref={stepsRef}>
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-14">
-            <span className="text-blue-600 font-semibold text-sm uppercase tracking-widest">Simple Process</span>
-            <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 mt-2">How RentEase Works</h2>
+            <span className="text-blue-600 dark:text-blue-400 font-semibold text-sm uppercase tracking-widest">Simple Process</span>
+            <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 dark:text-white mt-2">How RentEase Works</h2>
           </div>
           <div className="grid md:grid-cols-3 gap-6 relative">
-            <div className="hidden md:block absolute top-10 left-[20%] right-[20%] h-0.5 bg-gradient-to-r from-blue-200 via-blue-400 to-blue-200 z-0" />
+            <div className="hidden md:block absolute top-10 left-[20%] right-[20%] h-0.5 bg-gradient-to-r from-blue-200 via-blue-400 to-blue-200 dark:from-blue-900 dark:via-blue-600 dark:to-blue-900 z-0" />
             {steps.map((s, i) => (
               <div key={s.step}
-                className="relative bg-white rounded-2xl p-8 shadow-sm border border-gray-100 text-center hover:shadow-lg hover:-translate-y-2 transition-all duration-300 z-10"
+                className="relative bg-white dark:bg-slate-800 rounded-2xl p-8 shadow-sm border border-gray-100 dark:border-slate-700 text-center hover:shadow-lg hover:-translate-y-2 transition-all duration-300 z-10"
                 style={{ opacity: stepsVisible ? 1 : 0, transform: stepsVisible ? 'none' : 'translateY(30px)', transition: `opacity 0.6s ease ${i * 0.15}s, transform 0.6s ease ${i * 0.15}s, box-shadow 0.3s, transform 0.3s` }}>
-                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-700 text-white rounded-2xl flex items-center justify-center text-2xl font-extrabold mx-auto mb-4 shadow-lg shadow-blue-200">
+                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-700 text-white rounded-2xl flex items-center justify-center text-2xl font-extrabold mx-auto mb-4 shadow-lg shadow-blue-200 dark:shadow-none">
                   {s.icon}
                 </div>
-                <div className="text-xs font-bold text-blue-400 uppercase tracking-widest mb-1">Step {s.step}</div>
-                <h3 className="font-bold text-gray-900 text-lg mb-2">{s.title}</h3>
-                <p className="text-gray-500 text-sm leading-relaxed">{s.desc}</p>
+                <div className="text-xs font-bold text-blue-400 dark:text-blue-500 uppercase tracking-widest mb-1">Step {s.step}</div>
+                <h3 className="font-bold text-gray-900 dark:text-white text-lg mb-2">{s.title}</h3>
+                <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">{s.desc}</p>
               </div>
             ))}
           </div>
@@ -193,22 +193,22 @@ export default function Landing() {
       </section>
 
       {/* ── FEATURES ── */}
-      <section className="py-20 px-6 bg-white" ref={featRef}>
+      <section className="py-20 px-6 bg-white dark:bg-slate-900 transition-colors duration-300" ref={featRef}>
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-14">
-            <span className="text-blue-600 font-semibold text-sm uppercase tracking-widest">Everything You Need</span>
-            <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 mt-2">Built for the Modern Renter</h2>
+            <span className="text-blue-600 dark:text-blue-400 font-semibold text-sm uppercase tracking-widest">Everything You Need</span>
+            <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 dark:text-white mt-2">Built for the Modern Renter</h2>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {features.map((f, i) => (
               <div key={f.title}
-                className="group p-6 rounded-2xl border border-gray-100 hover:border-blue-200 hover:shadow-xl hover:-translate-y-2 transition-all duration-300 bg-white cursor-default"
+                className="group p-6 rounded-2xl border border-gray-100 dark:border-slate-800 hover:border-blue-200 dark:hover:border-blue-800 hover:shadow-xl hover:-translate-y-2 transition-all duration-300 bg-white dark:bg-slate-800 cursor-default"
                 style={{ opacity: featVisible ? 1 : 0, transform: featVisible ? 'none' : 'translateY(30px)', transition: `opacity 0.5s ease ${i * 0.08}s, transform 0.5s ease ${i * 0.08}s, box-shadow 0.3s, border-color 0.3s` }}>
-                <div className="w-12 h-12 bg-blue-50 group-hover:bg-blue-100 group-hover:scale-110 rounded-xl flex items-center justify-center text-2xl mb-4 transition-all duration-300">
+                <div className="w-12 h-12 bg-blue-50 dark:bg-slate-700 group-hover:bg-blue-100 dark:group-hover:bg-slate-600 group-hover:scale-110 rounded-xl flex items-center justify-center text-2xl mb-4 transition-all duration-300">
                   {f.icon}
                 </div>
-                <h3 className="font-bold text-gray-900 text-lg mb-2">{f.title}</h3>
-                <p className="text-gray-500 text-sm leading-relaxed">{f.desc}</p>
+                <h3 className="font-bold text-gray-900 dark:text-white text-lg mb-2">{f.title}</h3>
+                <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">{f.desc}</p>
               </div>
             ))}
           </div>
@@ -216,26 +216,26 @@ export default function Landing() {
       </section>
 
       {/* ── TESTIMONIALS ── */}
-      <section className="py-20 px-6 bg-gradient-to-b from-gray-50 to-white" ref={testRef}>
+      <section className="py-20 px-6 bg-gradient-to-b from-gray-50 to-white dark:from-slate-900 dark:to-slate-800 transition-colors duration-300" ref={testRef}>
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-14">
-            <span className="text-blue-600 font-semibold text-sm uppercase tracking-widest">Testimonials</span>
-            <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 mt-2">What Tenants Say</h2>
+            <span className="text-blue-600 dark:text-blue-400 font-semibold text-sm uppercase tracking-widest">Testimonials</span>
+            <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 dark:text-white mt-2">What Tenants Say</h2>
           </div>
           <div className="grid md:grid-cols-3 gap-6">
             {testimonials.map((t, i) => (
               <div key={t.name}
-                className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
+                className="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-slate-800 hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
                 style={{ opacity: testVisible ? 1 : 0, transform: testVisible ? 'none' : 'translateY(30px)', transition: `opacity 0.5s ease ${i * 0.12}s, transform 0.5s ease ${i * 0.12}s, box-shadow 0.3s` }}>
                 <div className="flex items-center gap-0.5 text-amber-400 mb-3 text-lg">{'★★★★★'}</div>
-                <p className="text-gray-600 text-sm leading-relaxed mb-5 italic">"{t.text}"</p>
+                <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed mb-5 italic">"{t.text}"</p>
                 <div className="flex items-center gap-3">
                   <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${t.color} text-white flex items-center justify-center text-xs font-bold flex-shrink-0 shadow-md`}>
                     {t.avatar}
                   </div>
                   <div>
-                    <p className="font-semibold text-gray-900 text-sm">{t.name}</p>
-                    <p className="text-xs text-gray-400">📍 {t.city}</p>
+                    <p className="font-semibold text-gray-900 dark:text-gray-200 text-sm">{t.name}</p>
+                    <p className="text-xs text-gray-400 dark:text-gray-500">📍 {t.city}</p>
                   </div>
                 </div>
               </div>

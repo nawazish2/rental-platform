@@ -28,7 +28,7 @@ export default function PropertyCard({ property, onShortlist, isShortlisted, sho
   };
 
   return (
-    <div className="group bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200">
+    <div className="group bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200">
 
       {/* Image */}
       <div className="relative overflow-hidden">
@@ -54,7 +54,7 @@ export default function PropertyCard({ property, onShortlist, isShortlisted, sho
         )}
         {/* Compare checkbox */}
         {showCompare && user?.role === 'tenant' && (
-          <label className="absolute bottom-3 right-3 flex items-center gap-1.5 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg text-xs font-medium text-gray-600 cursor-pointer shadow-sm">
+          <label className="absolute bottom-3 right-3 flex items-center gap-1.5 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm px-2 py-1 rounded-lg text-xs font-medium text-gray-600 dark:text-gray-300 cursor-pointer shadow-sm">
             <input type="checkbox" checked={compareSelected} onChange={() => onCompareToggle(property._id)} className="w-3.5 h-3.5 accent-blue-600" />
             Compare
           </label>
@@ -65,30 +65,30 @@ export default function PropertyCard({ property, onShortlist, isShortlisted, sho
       <div className="p-4">
         <div className="flex justify-between items-start mb-1.5">
           <Link to={`/property/${property._id}`}>
-            <h3 className="font-bold text-gray-900 hover:text-blue-600 line-clamp-1 text-sm leading-snug transition-colors">
+            <h3 className="font-bold text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400 line-clamp-1 text-sm leading-snug transition-colors">
               {property.title}
             </h3>
           </Link>
         </div>
-        <p className="text-xs text-gray-400 flex items-center gap-1 mb-3">
+        <p className="text-xs text-gray-400 dark:text-gray-500 flex items-center gap-1 mb-3">
           <span>📍</span>{property.location}
         </p>
 
         {/* Amenities */}
         <div className="flex flex-wrap gap-1 mb-3">
           {property.amenities?.slice(0, 3).map((a) => (
-            <span key={a} className="text-xs text-gray-500 bg-gray-50 border border-gray-100 px-2 py-0.5 rounded-md">{a}</span>
+            <span key={a} className="text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-slate-800 border border-gray-100 dark:border-slate-700 px-2 py-0.5 rounded-md">{a}</span>
           ))}
           {property.amenities?.length > 3 && (
-            <span className="text-xs text-gray-400 px-2 py-0.5">+{property.amenities.length - 3}</span>
+            <span className="text-xs text-gray-400 dark:text-gray-500 px-2 py-0.5">+{property.amenities.length - 3}</span>
           )}
         </div>
 
         {/* Price + CTA */}
-        <div className="flex items-center justify-between pt-3 border-t border-gray-50">
+        <div className="flex items-center justify-between pt-3 border-t border-gray-50 dark:border-slate-800">
           <div>
-            <span className="text-lg font-extrabold text-gray-900">₹{property.price?.toLocaleString()}</span>
-            <span className="text-xs text-gray-400">/mo</span>
+            <span className="text-lg font-extrabold text-gray-900 dark:text-white">₹{property.price?.toLocaleString()}</span>
+            <span className="text-xs text-gray-400 dark:text-gray-500">/mo</span>
           </div>
           <Link to={`/property/${property._id}`}
             className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-4 py-2 rounded-xl transition-colors">
