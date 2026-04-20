@@ -4,17 +4,30 @@ import api from '../api/axios';
 
 export default function Compare() {
   const [searchParams] = useSearchParams();
+  const ids = searchParams.get('ids');
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const ids = searchParams.get('ids');
-    if (!ids) { setLoading(false); return; }
+    if (!ids) {
+      setProperties([]);
+      setLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setLoading(true);
     api.get('/api/properties/compare', { params: { ids } })
-      .then((res) => setProperties(res.data.properties))
+      .then((res) => {
+        if (!cancelled) setProperties(res.data.properties || []);
+      })
       .catch(console.error)
-      .finally(() => setLoading(false));
-  }, []);
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [ids]);
 
   const rows = [
     { label: 'Price/Month', key: (p) => `₹${p.price?.toLocaleString()}` },

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import api from '../../api/axios';
 import StatusBadge from '../../components/StatusBadge';
 
@@ -173,16 +173,47 @@ export default function AdminListings() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const [pages, setPages] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [statusCounts, setStatusCounts] = useState({ all: 0, draft: 0, review: 0, published: 0 });
   const [actionLoading, setActionLoading] = useState('');
   const [msg, setMsg] = useState('');
   const [showAdd, setShowAdd] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState(null);
 
-  const fetchListings = async () => {
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search.trim()), 400);
+    return () => clearTimeout(t);
+  }, [search]);
+
+  const fetchListings = useCallback(async () => {
     setLoading(true);
-    api.get('/api/admin/listings').then((r) => setListings(r.data.listings)).finally(() => setLoading(false));
-  };
+    try {
+      const params = { page, limit: 20 };
+      if (filter !== 'all') params.status = filter;
+      if (debouncedSearch) params.q = debouncedSearch;
+      const r = await api.get('/api/admin/listings', { params });
+      const rows = r.data.properties || r.data.listings || [];
+      setListings(rows);
+      setTotal(r.data.total ?? rows.length);
+      setPages(r.data.pages ?? 1);
+      if (r.data.statusCounts) setStatusCounts(r.data.statusCounts);
+    } catch (err) {
+      setMsg('Error loading listings: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setLoading(false);
+    }
+  }, [page, filter, debouncedSearch]);
 
-  useEffect(() => { fetchListings(); }, []);
+  useEffect(() => {
+    fetchListings();
+  }, [fetchListings]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch]);
 
   const advanceStatus = async (id, current) => {
     const next = STATUS_FLOW[current];
@@ -190,37 +221,34 @@ export default function AdminListings() {
     setActionLoading(id);
     try {
       await api.put(`/api/properties/${id}/status`, { status: next });
-      setListings((prev) => prev.map((p) => p._id === id ? { ...p, status: next } : p));
+      await fetchListings();
       setMsg(`Listing ${next === 'published' ? 'published ✅' : 'submitted for review'}`);
       setTimeout(() => setMsg(''), 2500);
-    } finally { setActionLoading(''); }
+    } finally {
+      setActionLoading('');
+    }
   };
 
   const deleteListing = async (id) => {
-    if (!confirm('Delete this listing?')) return;
     setActionLoading(id);
     try {
       await api.delete(`/api/properties/${id}`);
-      setListings((prev) => prev.filter((p) => p._id !== id));
+      setDeleteTargetId(null);
+      await fetchListings();
       setMsg('Listing deleted');
       setTimeout(() => setMsg(''), 2000);
-    } finally { setActionLoading(''); }
+    } finally {
+      setActionLoading('');
+    }
   };
 
-  const handleCreated = (property) => {
-    setListings((prev) => [property, ...prev]);
+  const handleCreated = async () => {
     setMsg('Listing created! ✅');
     setTimeout(() => setMsg(''), 2500);
+    await fetchListings();
   };
 
-  const filtered = listings.filter((p) => {
-    const matchStatus = filter === 'all' || p.status === filter;
-    const matchSearch = !search || p.title?.toLowerCase().includes(search.toLowerCase()) || p.city?.toLowerCase().includes(search.toLowerCase());
-    return matchStatus && matchSearch;
-  });
-
-  const counts = { all: listings.length, draft: 0, review: 0, published: 0 };
-  listings.forEach((l) => { if (counts[l.status] !== undefined) counts[l.status]++; });
+  const counts = statusCounts;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -231,7 +259,7 @@ export default function AdminListings() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-extrabold text-gray-900">Manage Listings</h1>
-              <p className="text-gray-400 text-sm mt-0.5">{listings.length} total properties</p>
+              <p className="text-gray-400 text-sm mt-0.5">{total} matching · page {page} of {pages}</p>
             </div>
             <button onClick={() => setShowAdd(true)}
               className="bg-blue-600 text-white px-5 py-2.5 rounded-xl font-semibold text-sm hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-sm">
@@ -242,7 +270,7 @@ export default function AdminListings() {
           {/* Filter tabs */}
           <div className="flex gap-1 mt-5 flex-wrap">
             {['all', 'draft', 'review', 'published'].map((s) => (
-              <button key={s} onClick={() => setFilter(s)}
+              <button key={s} onClick={() => { setFilter(s); setPage(1); }}
                 className={`px-4 py-2 rounded-xl text-sm font-semibold capitalize transition-all flex items-center gap-1.5 ${
                   filter === s ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-500 hover:bg-gray-100'
                 }`}>
@@ -267,7 +295,7 @@ export default function AdminListings() {
 
         {loading ? (
           <div className="flex justify-center py-16"><div className="animate-spin rounded-full h-10 w-10 border-4 border-blue-100 border-t-blue-600"/></div>
-        ) : filtered.length === 0 ? (
+        ) : listings.length === 0 ? (
           <div className="text-center py-20 bg-white rounded-2xl border border-gray-100">
             <span className="text-4xl block mb-2">🏠</span>
             <p className="text-gray-500 font-semibold">No listings found</p>
@@ -286,7 +314,7 @@ export default function AdminListings() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {filtered.map((p) => (
+                {listings.map((p) => (
                   <tr key={p._id} className="hover:bg-gray-50/50 transition-colors">
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-3">
@@ -312,8 +340,12 @@ export default function AdminListings() {
                             {actionLoading === p._id ? '...' : STATUS_LABEL[p.status]}
                           </button>
                         )}
-                        <button disabled={actionLoading === p._id} onClick={() => deleteListing(p._id)}
-                          className="text-xs text-red-400 hover:text-red-600 font-medium transition-colors px-2">
+                        <button
+                          type="button"
+                          disabled={actionLoading === p._id}
+                          onClick={() => setDeleteTargetId(p._id)}
+                          className="text-xs text-red-400 hover:text-red-600 font-medium transition-colors px-2"
+                        >
                           Delete
                         </button>
                       </div>
@@ -324,7 +356,56 @@ export default function AdminListings() {
             </table>
           </div>
         )}
+
+        {pages > 1 && (
+          <div className="flex justify-center items-center gap-3 mt-8">
+            <button
+              type="button"
+              disabled={page <= 1}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              className="px-4 py-2 rounded-xl border border-gray-200 text-sm font-medium disabled:opacity-40 hover:bg-gray-50"
+            >
+              Previous
+            </button>
+            <span className="text-sm text-gray-500">
+              Page {page} / {pages}
+            </span>
+            <button
+              type="button"
+              disabled={page >= pages}
+              onClick={() => setPage((p) => p + 1)}
+              className="px-4 py-2 rounded-xl border border-gray-200 text-sm font-medium disabled:opacity-40 hover:bg-gray-50"
+            >
+              Next
+            </button>
+          </div>
+        )}
       </div>
+
+      {deleteTargetId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true" aria-labelledby="admin-delete-title">
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 border border-gray-100">
+            <h2 id="admin-delete-title" className="text-lg font-bold text-gray-900">Delete this listing?</h2>
+            <p className="text-sm text-gray-500 mt-2">This removes the property for all users. This action cannot be undone.</p>
+            <div className="flex gap-3 mt-6">
+              <button
+                type="button"
+                onClick={() => setDeleteTargetId(null)}
+                className="flex-1 border border-gray-200 text-gray-700 py-2.5 rounded-xl text-sm font-semibold hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => deleteListing(deleteTargetId)}
+                className="flex-1 bg-red-600 text-white py-2.5 rounded-xl text-sm font-semibold hover:bg-red-700"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

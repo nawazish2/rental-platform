@@ -1,31 +1,51 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../../api/axios';
-import StatusBadge from '../../components/StatusBadge';
 
 export default function AdminMoveOut() {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [pages, setPages] = useState(1);
+  const [total, setTotal] = useState(0);
   const [actionLoading, setActionLoading] = useState('');
   const [msg, setMsg] = useState('');
 
-  useEffect(() => {
-    api.get('/api/admin/moveout-requests')
-      .then(r => setRequests(r.data.moveIns))
-      .finally(() => setLoading(false));
-  }, []);
+  const fetchRequests = useCallback(async () => {
+    setLoading(true);
+    try {
+      const r = await api.get('/api/admin/moveout-requests', { params: { page, limit: 25 } });
+      setRequests(r.data.moveIns);
+      setTotal(r.data.total ?? r.data.moveIns?.length ?? 0);
+      setPages(r.data.pages ?? 1);
+    } catch (err) {
+      setMsg('Error: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setLoading(false);
+    }
+  }, [page]);
 
-  const flash = (m) => { setMsg(m); setTimeout(() => setMsg(''), 3000); };
+  useEffect(() => {
+    fetchRequests();
+  }, [fetchRequests]);
+
+  const flash = (m) => {
+    setMsg(m);
+    setTimeout(() => setMsg(''), 3000);
+  };
 
   const respond = async (id, status) => {
     setActionLoading(id + status);
     try {
       await api.put(`/api/movein/${id}/moveout-respond`, { status });
-      setRequests(p => p.filter(r => r._id !== id));
+      setRequests((p) => p.filter((r) => r._id !== id));
       flash(`Move-out ${status} ✅`);
+      await fetchRequests();
     } catch (err) {
       flash('Error: ' + (err.response?.data?.message || err.message));
-    } finally { setActionLoading(''); }
+    } finally {
+      setActionLoading('');
+    }
   };
 
   return (
@@ -36,7 +56,9 @@ export default function AdminMoveOut() {
             <Link to="/admin" className="text-gray-400 hover:text-gray-600 text-sm">← Admin</Link>
             <div>
               <h1 className="text-2xl font-extrabold text-gray-900">Move-Out Requests</h1>
-              <p className="text-gray-400 text-sm mt-0.5">{requests.length} pending request{requests.length !== 1 ? 's' : ''}</p>
+              <p className="text-gray-400 text-sm mt-0.5">
+                {total} pending · page {page} of {pages}
+              </p>
             </div>
           </div>
         </div>
@@ -54,55 +76,85 @@ export default function AdminMoveOut() {
             <p className="text-gray-400 text-sm mt-2">All caught up!</p>
           </div>
         ) : (
-          <div className="space-y-4">
-            {requests.map(r => (
-              <div key={r._id} className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
-                <div className="flex flex-wrap items-start justify-between gap-4">
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <p className="font-bold text-gray-900">{r.tenant?.name}</p>
-                      <span className="text-gray-300">·</span>
-                      <p className="text-sm text-gray-400">{r.tenant?.email}</p>
-                    </div>
-                    <p className="text-sm text-gray-600">🏠 {r.property?.title} — {r.property?.city}</p>
-                    <div className="mt-2 flex flex-wrap gap-4 text-sm">
-                      <span className="text-gray-500">
-                        📅 Preferred: <span className="font-semibold text-gray-700">
-                          {r.moveOut?.preferredDate ? new Date(r.moveOut.preferredDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }) : '—'}
-                        </span>
-                      </span>
-                      <span className="text-gray-500">
-                        🕒 Requested: <span className="font-semibold text-gray-700">
-                          {r.moveOut?.requestedAt ? new Date(r.moveOut.requestedAt).toLocaleDateString('en-IN') : '—'}
-                        </span>
-                      </span>
-                    </div>
-                    {r.moveOut?.reason && (
-                      <div className="mt-3 bg-gray-50 rounded-xl px-4 py-2.5">
-                        <p className="text-xs text-gray-400 font-medium uppercase tracking-wide mb-1">Reason</p>
-                        <p className="text-sm text-gray-700">{r.moveOut.reason}</p>
+          <>
+            <div className="space-y-4">
+              {requests.map((r) => (
+                <div key={r._id} className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
+                  <div className="flex flex-wrap items-start justify-between gap-4">
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className="font-bold text-gray-900">{r.tenant?.name}</p>
+                        <span className="text-gray-300">·</span>
+                        <p className="text-sm text-gray-400">{r.tenant?.email}</p>
                       </div>
-                    )}
-                  </div>
+                      <p className="text-sm text-gray-600">🏠 {r.property?.title} — {r.property?.city}</p>
+                      <div className="mt-2 flex flex-wrap gap-4 text-sm">
+                        <span className="text-gray-500">
+                          📅 Preferred:{' '}
+                          <span className="font-semibold text-gray-700">
+                            {r.moveOut?.preferredDate ? new Date(r.moveOut.preferredDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }) : '—'}
+                          </span>
+                        </span>
+                        <span className="text-gray-500">
+                          🕒 Requested:{' '}
+                          <span className="font-semibold text-gray-700">
+                            {r.moveOut?.requestedAt ? new Date(r.moveOut.requestedAt).toLocaleDateString('en-IN') : '—'}
+                          </span>
+                        </span>
+                      </div>
+                      {r.moveOut?.reason && (
+                        <div className="mt-3 bg-gray-50 rounded-xl px-4 py-2.5">
+                          <p className="text-xs text-gray-400 font-medium uppercase tracking-wide mb-1">Reason</p>
+                          <p className="text-sm text-gray-700">{r.moveOut.reason}</p>
+                        </div>
+                      )}
+                    </div>
 
-                  <div className="flex gap-2 flex-shrink-0">
-                    <button
-                      disabled={!!actionLoading}
-                      onClick={() => respond(r._id, 'approved')}
-                      className="bg-green-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-green-700 disabled:opacity-50 transition-colors">
-                      {actionLoading === r._id + 'approved' ? '...' : '✅ Approve'}
-                    </button>
-                    <button
-                      disabled={!!actionLoading}
-                      onClick={() => respond(r._id, 'rejected')}
-                      className="border border-red-200 text-red-500 px-4 py-2 rounded-xl text-sm font-semibold hover:bg-red-50 disabled:opacity-50 transition-colors">
-                      {actionLoading === r._id + 'rejected' ? '...' : '❌ Reject'}
-                    </button>
+                    <div className="flex gap-2 flex-shrink-0">
+                      <button
+                        type="button"
+                        disabled={!!actionLoading}
+                        onClick={() => respond(r._id, 'approved')}
+                        className="bg-green-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-green-700 disabled:opacity-50 transition-colors"
+                      >
+                        {actionLoading === r._id + 'approved' ? '...' : '✅ Approve'}
+                      </button>
+                      <button
+                        type="button"
+                        disabled={!!actionLoading}
+                        onClick={() => respond(r._id, 'rejected')}
+                        className="border border-red-200 text-red-500 px-4 py-2 rounded-xl text-sm font-semibold hover:bg-red-50 disabled:opacity-50 transition-colors"
+                      >
+                        {actionLoading === r._id + 'rejected' ? '...' : '❌ Reject'}
+                      </button>
+                    </div>
                   </div>
                 </div>
+              ))}
+            </div>
+
+            {pages > 1 && (
+              <div className="flex justify-center items-center gap-3 mt-8">
+                <button
+                  type="button"
+                  disabled={page <= 1}
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  className="px-4 py-2 rounded-xl border border-gray-200 text-sm font-medium disabled:opacity-40 hover:bg-gray-50"
+                >
+                  Previous
+                </button>
+                <span className="text-sm text-gray-500">Page {page} / {pages}</span>
+                <button
+                  type="button"
+                  disabled={page >= pages}
+                  onClick={() => setPage((p) => p + 1)}
+                  className="px-4 py-2 rounded-xl border border-gray-200 text-sm font-medium disabled:opacity-40 hover:bg-gray-50"
+                >
+                  Next
+                </button>
               </div>
-            ))}
-          </div>
+            )}
+          </>
         )}
       </div>
     </div>

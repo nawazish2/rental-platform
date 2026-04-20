@@ -31,18 +31,26 @@ export function AuthProvider({ children }) {
 
   const login = async (email, password) => {
     dispatch({ type: 'SET_LOADING', payload: true });
-    const res = await api.post('/api/auth/login', { email, password });
-    localStorage.setItem('token', res.data.token);
-    dispatch({ type: 'SET_USER', payload: res.data.user });
-    return res.data.user;
+    try {
+      const res = await api.post('/api/auth/login', { email, password });
+      localStorage.setItem('token', res.data.token);
+      dispatch({ type: 'SET_USER', payload: res.data.user });
+      return res.data.user;
+    } finally {
+      dispatch({ type: 'SET_LOADING', payload: false });
+    }
   };
 
   const register = async (data) => {
     dispatch({ type: 'SET_LOADING', payload: true });
-    const res = await api.post('/api/auth/register', data);
-    localStorage.setItem('token', res.data.token);
-    dispatch({ type: 'SET_USER', payload: res.data.user });
-    return res.data.user;
+    try {
+      const res = await api.post('/api/auth/register', data);
+      localStorage.setItem('token', res.data.token);
+      dispatch({ type: 'SET_USER', payload: res.data.user });
+      return res.data.user;
+    } finally {
+      dispatch({ type: 'SET_LOADING', payload: false });
+    }
   };
 
   const logout = () => {

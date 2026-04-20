@@ -14,6 +14,11 @@ api.interceptors.response.use(
   (res) => res,
   (err) => {
     if (err.response?.status === 401) {
+      const reqUrl = err.config?.url || '';
+      // Wrong password on login/register must not hard-redirect (breaks error message UX)
+      if (reqUrl.includes('/auth/login') || reqUrl.includes('/auth/register')) {
+        return Promise.reject(err);
+      }
       localStorage.removeItem('token');
       window.location.href = '/login';
     }

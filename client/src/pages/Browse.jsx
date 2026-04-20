@@ -20,27 +20,39 @@ export default function Browse() {
   const [applied, setApplied] = useState({});
 
   useEffect(() => {
-    fetchProperties();
-    if (user?.role === 'tenant') fetchShortlist();
-  }, [applied, page]);
-
-  const fetchProperties = async () => {
-    setLoading(true);
-    try {
-      const res = await api.get('/api/properties', { params: { ...applied, page } });
-      setProperties(res.data.properties);
-      setTotal(res.data.total);
-      setPages(res.data.pages);
-    } catch (err) { console.error(err); }
-    finally { setLoading(false); }
-  };
-
-  const fetchShortlist = async () => {
-    try {
-      const res = await api.get('/api/shortlists/my');
-      setShortlisted(new Set(res.data.properties.map((p) => p._id)));
-    } catch {}
-  };
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      try {
+        const res = await api.get('/api/properties', { params: { ...applied, page } });
+        if (!cancelled) {
+          setProperties(res.data.properties);
+          setTotal(res.data.total);
+          setPages(res.data.pages);
+        }
+      } catch (err) {
+        if (!cancelled) console.error(err);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+      if (cancelled) return;
+      if (user?.role === 'tenant') {
+        try {
+          const sr = await api.get('/api/shortlists/my');
+          if (!cancelled) {
+            setShortlisted(new Set((sr.data.properties || []).map((p) => p._id)));
+          }
+        } catch {
+          if (!cancelled) setShortlisted(new Set());
+        }
+      } else if (!cancelled) {
+        setShortlisted(new Set());
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [applied, page, user?.role]);
 
   const handleSearch = (e) => { e.preventDefault(); setApplied({ ...filters }); setPage(1); };
   const handleReset = () => { const empty = { location: '', budgetMin: '', budgetMax: '', moveInDate: '', type: '' }; setFilters(empty); setApplied({}); setPage(1); };
@@ -76,7 +88,7 @@ export default function Browse() {
             <input
               type="text" name="location" value={filters.location}
               onChange={(e) => setFilters({ ...filters, location: e.target.value })}
-              placeholder="�� Location or city"
+              placeholder="Location or city"
               className="col-span-2 md:col-span-2 lg:col-span-2 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
             <input
@@ -126,10 +138,12 @@ export default function Browse() {
         {compareIds.length >= 2 && (
           <div className="mb-4 flex items-center gap-3 bg-blue-600 text-white rounded-2xl px-5 py-3 shadow-lg shadow-blue-200">
             <span className="text-sm font-semibold">{compareIds.length} properties selected</span>
-            <a href={`/compare?ids=${compareIds.join(',')}`}
-              className="bg-white text-blue-600 px-4 py-1.5 rounded-xl text-sm font-bold hover:bg-blue-50 transition-colors ml-auto">
+            <Link
+              to={`/compare?ids=${compareIds.join(',')}`}
+              className="bg-white text-blue-600 px-4 py-1.5 rounded-xl text-sm font-bold hover:bg-blue-50 transition-colors ml-auto"
+            >
               Compare Now →
-            </a>
+            </Link>
             <button onClick={() => setCompareIds([])} className="text-blue-200 hover:text-white text-sm">Clear</button>
           </div>
         )}

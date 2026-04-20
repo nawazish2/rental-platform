@@ -129,6 +129,7 @@ export default function OwnerDashboard() {
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState('');
   const [visits, setVisits] = useState([]);
+  const [deleteTargetId, setDeleteTargetId] = useState(null);
 
   useEffect(() => {
     Promise.all([
@@ -162,12 +163,14 @@ export default function OwnerDashboard() {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Delete this listing?')) return;
     try {
       await api.delete(`/api/properties/${id}`);
-      setListings(p => p.filter(x => x._id !== id));
+      setListings((p) => p.filter((x) => x._id !== id));
+      setDeleteTargetId(null);
       flash('Listing deleted');
-    } catch (err) { flash('Error: ' + (err.response?.data?.message || err.message)); }
+    } catch (err) {
+      flash('Error: ' + (err.response?.data?.message || err.message));
+    }
   };
 
   const TABS = [
@@ -256,8 +259,11 @@ export default function OwnerDashboard() {
                         className="flex-1 border border-gray-200 text-gray-600 py-1.5 rounded-xl text-xs font-semibold hover:bg-gray-50 transition-colors">
                         ✏️ Edit
                       </button>
-                      <button onClick={() => handleDelete(p._id)}
-                        className="flex-1 border border-red-100 text-red-400 py-1.5 rounded-xl text-xs font-semibold hover:bg-red-50 transition-colors">
+                      <button
+                        type="button"
+                        onClick={() => setDeleteTargetId(p._id)}
+                        className="flex-1 border border-red-100 text-red-400 py-1.5 rounded-xl text-xs font-semibold hover:bg-red-50 transition-colors"
+                      >
                         🗑️ Delete
                       </button>
                     </div>
@@ -301,6 +307,31 @@ export default function OwnerDashboard() {
           )
         )}
       </div>
+
+      {deleteTargetId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true" aria-labelledby="delete-listing-title">
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 border border-gray-100">
+            <h2 id="delete-listing-title" className="text-lg font-bold text-gray-900">Delete listing?</h2>
+            <p className="text-sm text-gray-500 mt-2">This cannot be undone. The property will be removed from the platform.</p>
+            <div className="flex gap-3 mt-6">
+              <button
+                type="button"
+                onClick={() => setDeleteTargetId(null)}
+                className="flex-1 border border-gray-200 text-gray-700 py-2.5 rounded-xl text-sm font-semibold hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDelete(deleteTargetId)}
+                className="flex-1 bg-red-600 text-white py-2.5 rounded-xl text-sm font-semibold hover:bg-red-700"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

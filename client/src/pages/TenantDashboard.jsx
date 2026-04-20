@@ -13,13 +13,19 @@ export default function TenantDashboard() {
   const [shortlist, setShortlist] = useState([]);
   const [compareIds, setCompareIds] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
+    setLoadError('');
     Promise.all([
       api.get('/api/visits/my').then((r) => setVisits(r.data.visits)),
       api.get('/api/shortlists/my').then((r) => setShortlist(r.data.properties)),
-    ]).finally(() => setLoading(false));
+    ])
+      .catch((err) => {
+        setLoadError(err.response?.data?.message || 'Could not load your dashboard. Try refreshing the page.');
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   const handleRemoveShortlist = async (id) => {
@@ -81,6 +87,11 @@ export default function TenantDashboard() {
       </div>
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+        {loadError && (
+          <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">
+            {loadError}
+          </div>
+        )}
 
         {/* ── VISITS TAB ── */}
         {tab === 'visits' && (
@@ -157,10 +168,12 @@ export default function TenantDashboard() {
             {compareIds.length >= 2 && (
               <div className="mb-5 flex items-center gap-3 bg-blue-600 text-white rounded-2xl px-5 py-3 shadow-lg shadow-blue-200">
                 <span className="text-sm font-semibold">{compareIds.length} properties selected</span>
-                <a href={`/compare?ids=${compareIds.join(',')}`}
-                  className="bg-white text-blue-600 px-4 py-1.5 rounded-xl text-sm font-bold hover:bg-blue-50 ml-auto">
+                <Link
+                  to={`/compare?ids=${compareIds.join(',')}`}
+                  className="bg-white text-blue-600 px-4 py-1.5 rounded-xl text-sm font-bold hover:bg-blue-50 ml-auto"
+                >
                   Compare Now →
-                </a>
+                </Link>
                 <button onClick={() => setCompareIds([])} className="text-blue-200 hover:text-white text-sm">Clear</button>
               </div>
             )}

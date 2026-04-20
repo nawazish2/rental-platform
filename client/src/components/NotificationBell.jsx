@@ -1,23 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../api/axios';
+import { useNotifications } from '../context/NotificationContext';
 
 export default function NotificationBell() {
-  const [notifications, setNotifications] = useState([]);
-  const [unread, setUnread] = useState(0);
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
   const navigate = useNavigate();
-
-  const fetch = async () => {
-    try {
-      const res = await api.get('/api/notifications/my');
-      setNotifications(res.data.notifications);
-      setUnread(res.data.unread);
-    } catch {}
-  };
-
-  useEffect(() => { fetch(); const t = setInterval(fetch, 30000); return () => clearInterval(t); }, []);
+  const { notifications, unread, markAllRead, markAsRead } = useNotifications();
 
   useEffect(() => {
     const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
@@ -25,17 +14,13 @@ export default function NotificationBell() {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  const markAllRead = async () => {
-    await api.patch('/api/notifications/read-all');
-    setNotifications((n) => n.map((x) => ({ ...x, read: true })));
-    setUnread(0);
-  };
-
   const handleClick = async (n) => {
     if (!n.read) {
-      await api.patch(`/api/notifications/${n._id}/read`);
-      setNotifications((prev) => prev.map((x) => x._id === n._id ? { ...x, read: true } : x));
-      setUnread((u) => Math.max(0, u - 1));
+      try {
+        await markAsRead(n._id);
+      } catch {
+        return;
+      }
     }
     setOpen(false);
     if (n.link) navigate(n.link);

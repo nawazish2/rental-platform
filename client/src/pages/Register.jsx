@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { getDashboardPath } from '../utils/authRedirect';
 
 export default function Register() {
   const [form, setForm] = useState({ name: '', email: '', password: '', role: 'tenant', phone: '' });
@@ -16,7 +17,7 @@ export default function Register() {
     setLoading(true);
     try {
       const user = await register(form);
-      navigate(user.role === 'admin' ? '/admin' : user.role === 'owner' ? '/owner' : '/dashboard');
+      navigate(getDashboardPath(user.role));
     } catch (err) {
       setError(err.response?.data?.message || 'Registration failed');
     } finally {

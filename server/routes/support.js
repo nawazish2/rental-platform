@@ -1,16 +1,23 @@
 const router = require('express').Router();
 const SupportTicket = require('../models/SupportTicket');
-const { verifyToken } = require('../middleware/auth');
-const { requireRole } = require('../middleware/roleGuard');
-const { createNotification } = require('./notifications');
+const Property = require('../models/Property');
+const verifyToken = require('../middleware/auth');
+const requireRole = require('../middleware/roleGuard');
+const validate = require('../middleware/validate');
+const { createNotification } = require('../services/notifications');
+const {
+  supportCreateValidation,
+  supportMessageValidation,
+  supportStatusValidation,
+} = require('../validators');
+const { serverError } = require('../utils/serverError');
 
 // POST /api/support - create ticket
-router.post('/', verifyToken, requireRole('tenant'), async (req, res) => {
+router.post('/', verifyToken, requireRole('tenant'), supportCreateValidation, validate, async (req, res) => {
   try {
     const { propertyId, subject, category, message } = req.body;
-    if (!propertyId || !subject || !message) {
-      return res.status(400).json({ message: 'propertyId, subject, and message are required' });
-    }
+    const property = await Property.findById(propertyId);
+    if (!property) return res.status(404).json({ message: 'Property not found' });
     const ticket = await SupportTicket.create({
       property: propertyId,
       raisedBy: req.user._id,
@@ -20,7 +27,7 @@ router.post('/', verifyToken, requireRole('tenant'), async (req, res) => {
     });
     res.status(201).json({ ticket });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    return serverError(res, err);
   }
 });
 
@@ -32,7 +39,7 @@ router.get('/my', verifyToken, requireRole('tenant'), async (req, res) => {
       .sort({ createdAt: -1 });
     res.json({ tickets });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    return serverError(res, err);
   }
 });
 
@@ -45,7 +52,7 @@ router.get('/', verifyToken, requireRole('admin'), async (req, res) => {
       .sort({ createdAt: -1 });
     res.json({ tickets });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    return serverError(res, err);
   }
 });
 
@@ -63,15 +70,14 @@ router.get('/:id', verifyToken, async (req, res) => {
     }
     res.json({ ticket });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    return serverError(res, err);
   }
 });
 
 // POST /api/support/:id/message - add reply
-router.post('/:id/message', verifyToken, async (req, res) => {
+router.post('/:id/message', verifyToken, supportMessageValidation, validate, async (req, res) => {
   try {
     const { text } = req.body;
-    if (!text) return res.status(400).json({ message: 'Message text required' });
     const ticket = await SupportTicket.findById(req.params.id);
     if (!ticket) return res.status(404).json({ message: 'Ticket not found' });
     // Only ticket owner or admin can reply
@@ -88,24 +94,28 @@ router.post('/:id/message', verifyToken, async (req, res) => {
     }
     res.json({ ticket });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    return serverError(res, err);
   }
 });
 
 // PUT /api/support/:id/status - admin change status
-router.put('/:id/status', verifyToken, requireRole('admin'), async (req, res) => {
+router.put('/:id/status', verifyToken, requireRole('admin'), supportStatusValidation, validate, async (req, res) => {
   try {
     const { status } = req.body;
-    if (!['open', 'in_progress', 'resolved'].includes(status)) {
-      return res.status(400).json({ message: 'Invalid status' });
-    }
     const ticket = await SupportTicket.findByIdAndUpdate(
       req.params.id, { status }, { new: true }
     ).populate('property', 'title').populate('raisedBy', 'name email');
     if (!ticket) return res.status(404).json({ message: 'Ticket not found' });
+    await createNotification(
+      ticket.raisedBy._id,
+      'ticket_reply',
+      'Ticket Status Updated',
+      `Your support ticket "${ticket.subject}" is now marked as ${status.replace('_', ' ')}.`,
+      '/support'
+    );
     res.json({ ticket });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    return serverError(res, err);
   }
 });
 

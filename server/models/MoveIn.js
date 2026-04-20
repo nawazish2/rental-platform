@@ -4,6 +4,7 @@ const moveInSchema = new mongoose.Schema(
   {
     property: { type: mongoose.Schema.Types.ObjectId, ref: 'Property', required: true },
     tenant: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    moveInDate: { type: Date },
     status: {
       type: String,
       enum: ['checklist_pending', 'active', 'extension_requested', 'completed'],
@@ -47,5 +48,9 @@ const moveInSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+moveInSchema.index({ tenant: 1, createdAt: -1 });
+moveInSchema.index({ property: 1, tenant: 1 });
+moveInSchema.index({ 'moveOut.status': 1 });
 
 module.exports = mongoose.model('MoveIn', moveInSchema);

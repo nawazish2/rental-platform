@@ -20,6 +20,7 @@ export default function PropertyDetail() {
   const [activeTab, setActiveTab] = useState('overview');
   const [reviews, setReviews] = useState([]);
   const [avgRating, setAvgRating] = useState(null);
+  const [reviewTotal, setReviewTotal] = useState(0);
   const [reviewForm, setReviewForm] = useState({ rating: 0, comment: '' });
   const [reviewMsg, setReviewMsg] = useState('');
   const [similar, setSimilar] = useState([]);
@@ -29,13 +30,17 @@ export default function PropertyDetail() {
       .then((res) => {
         setProperty(res.data.property);
         // fetch reviews and similar in parallel
-        api.get(`/api/reviews/property/${id}`).then(r => { setReviews(r.data.reviews); setAvgRating(r.data.avgRating); }).catch(()=>{});
+        api.get(`/api/reviews/property/${id}`).then((r) => {
+          setReviews(r.data.reviews);
+          setAvgRating(r.data.avgRating);
+          setReviewTotal(typeof r.data.total === 'number' ? r.data.total : (r.data.reviews?.length ?? 0));
+        }).catch(() => {});
         const p = res.data.property;
         api.get(`/api/properties?city=${p.city}&type=${p.type}&limit=4`).then(r => setSimilar(r.data.properties?.filter(x => x._id !== id).slice(0,3))).catch(()=>{});
       })
       .catch(() => navigate('/browse'))
       .finally(() => setLoading(false));
-  }, [id]);
+  }, [id, navigate]);
 
   const handleVisitRequest = async (e) => {
     e.preventDefault();
@@ -300,7 +305,11 @@ export default function PropertyDetail() {
           <div className="flex items-center justify-between mb-5">
             <div>
               <h2 className="text-xl font-extrabold text-gray-900">Reviews</h2>
-              {avgRating && <p className="text-sm text-gray-400 mt-0.5">⭐ {avgRating} · {reviews.length} review{reviews.length !== 1 ? 's' : ''}</p>}
+              {avgRating && (
+                <p className="text-sm text-gray-400 mt-0.5">
+                  ⭐ {avgRating} · {reviewTotal} review{reviewTotal !== 1 ? 's' : ''}
+                </p>
+              )}
             </div>
           </div>
 
@@ -316,12 +325,15 @@ export default function PropertyDetail() {
                 <button onClick={async () => {
                   if (!reviewForm.rating) return setReviewMsg('Please select a rating');
                   try {
-                    const res = await api.post('/api/reviews', { propertyId: id, ...reviewForm });
-                    setReviews(prev => { const filtered = prev.filter(r => r.tenant._id !== user._id); return [res.data.review, ...filtered]; });
+                    await api.post('/api/reviews', { propertyId: id, ...reviewForm });
+                    const r = await api.get(`/api/reviews/property/${id}`);
+                    setReviews(r.data.reviews);
+                    setAvgRating(r.data.avgRating);
+                    setReviewTotal(typeof r.data.total === 'number' ? r.data.total : r.data.reviews?.length ?? 0);
                     setReviewMsg('Review submitted ✅');
                     setReviewForm({ rating: 0, comment: '' });
                     setTimeout(() => setReviewMsg(''), 3000);
-                  } catch(e) { setReviewMsg(e.response?.data?.message || 'Error'); }
+                  } catch (e) { setReviewMsg(e.response?.data?.message || 'Error'); }
                 }} className="bg-blue-600 text-white px-5 py-2 rounded-xl text-sm font-semibold hover:bg-blue-700 transition-colors">
                   Submit Review
                 </button>

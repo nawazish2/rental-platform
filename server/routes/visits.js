@@ -1,15 +1,21 @@
 const router = require('express').Router();
 const Visit = require('../models/Visit');
-const { verifyToken } = require('../middleware/auth');
-const { requireRole } = require('../middleware/roleGuard');
-const { createNotification } = require('./notifications');
+const Property = require('../models/Property');
+const verifyToken = require('../middleware/auth');
+const requireRole = require('../middleware/roleGuard');
+const validate = require('../middleware/validate');
+const { createNotification } = require('../services/notifications');
+const { visitCreateValidation, visitStatusValidation } = require('../validators');
+const { serverError } = require('../utils/serverError');
 
 // POST /api/visits - tenant requests a visit
-router.post('/', verifyToken, requireRole('tenant'), async (req, res) => {
+router.post('/', verifyToken, requireRole('tenant'), visitCreateValidation, validate, async (req, res) => {
   try {
     const { propertyId, preferredDate, notes } = req.body;
-    if (!propertyId || !preferredDate) {
-      return res.status(400).json({ message: 'propertyId and preferredDate required' });
+    const property = await Property.findById(propertyId);
+    if (!property) return res.status(404).json({ message: 'Property not found' });
+    if (property.status !== 'published') {
+      return res.status(400).json({ message: 'Visits can only be requested for published listings' });
     }
     // Prevent duplicate pending requests for same property
     const existing = await Visit.findOne({
@@ -28,7 +34,7 @@ router.post('/', verifyToken, requireRole('tenant'), async (req, res) => {
     await visit.populate('property', 'title location price images');
     res.status(201).json({ visit });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    return serverError(res, err);
   }
 });
 
@@ -40,14 +46,13 @@ router.get('/my', verifyToken, requireRole('tenant'), async (req, res) => {
       .sort({ createdAt: -1 });
     res.json({ visits });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    return serverError(res, err);
   }
 });
 
 // GET /api/visits/my-property - owner gets visits on their properties
 router.get('/my-property', verifyToken, requireRole('owner'), async (req, res) => {
   try {
-    const Property = require('../models/Property');
     const myProps = await Property.find({ createdBy: req.user._id }).select('_id');
     const propIds = myProps.map(p => p._id);
     const visits = await Visit.find({ property: { $in: propIds } })
@@ -56,7 +61,7 @@ router.get('/my-property', verifyToken, requireRole('owner'), async (req, res) =
       .sort({ createdAt: -1 });
     res.json({ visits });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    return serverError(res, err);
   }
 });
 
@@ -69,17 +74,14 @@ router.get('/', verifyToken, requireRole('admin'), async (req, res) => {
       .sort({ createdAt: -1 });
     res.json({ visits });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    return serverError(res, err);
   }
 });
 
 // PUT /api/visits/:id/status - admin updates visit status
-router.put('/:id/status', verifyToken, requireRole('admin'), async (req, res) => {
+router.put('/:id/status', verifyToken, requireRole('admin'), visitStatusValidation, validate, async (req, res) => {
   try {
     const { status, scheduledDate, adminNotes } = req.body;
-    const allowed = ['requested', 'scheduled', 'visited', 'decision_pending'];
-    if (!allowed.includes(status)) return res.status(400).json({ message: 'Invalid status' });
-
     const updates = { status };
     if (scheduledDate) updates.scheduledDate = new Date(scheduledDate);
     if (adminNotes !== undefined) updates.adminNotes = adminNotes;
@@ -100,7 +102,7 @@ router.put('/:id/status', verifyToken, requireRole('admin'), async (req, res) =>
     }
     res.json({ visit });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    return serverError(res, err);
   }
 });
 

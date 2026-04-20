@@ -77,8 +77,13 @@ export default function MoveIn() {
   };
 
   const handleRemoveInventory = async (itemId) => {
-    await api.delete(`/api/movein/${id}/inventory/${itemId}`);
-    await refresh();
+    try {
+      await api.delete(`/api/movein/${id}/inventory/${itemId}`);
+      await refresh();
+    } catch (err) {
+      setError(err.response?.data?.message || 'Could not remove item');
+      setTimeout(() => setError(''), 4000);
+    }
   };
 
   const handleExtensionRequest = async (e) => {

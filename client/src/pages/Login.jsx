@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { getDashboardPath } from '../utils/authRedirect';
 
 export default function Login() {
   const [form, setForm] = useState({ email: '', password: '' });
@@ -15,7 +16,7 @@ export default function Login() {
     setLoading(true);
     try {
       const user = await login(form.email, form.password);
-      navigate(user.role === 'admin' ? '/admin' : '/dashboard');
+      navigate(getDashboardPath(user.role));
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed');
     } finally {
@@ -33,8 +34,8 @@ export default function Login() {
         </div>
         {error && <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 mb-4 text-sm">{error}</div>}
         <div className="mb-4 p-3 bg-blue-50 border border-blue-100 rounded-lg text-xs text-blue-700">
-          <p><strong>Demo:</strong> tenant@demo.com / demo123</p>
-          <p><strong>Admin:</strong> nawazish@gmail.com / admin@macbook</p>
+          <p><strong>Demo tenant:</strong> use credentials from your seed data or README (never commit real passwords).</p>
+          <p><strong>Admin:</strong> create via database/seed only — public registration cannot create admin accounts.</p>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>

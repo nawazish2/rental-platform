@@ -18,7 +18,14 @@ const docStorage = new CloudinaryStorage({
   params: { folder: 'rentease/documents', resource_type: 'raw', allowed_formats: ['pdf', 'jpg', 'png', 'jpeg'] },
 });
 
-const uploadImages = multer({ storage: imageStorage });
-const uploadDoc = multer({ storage: docStorage });
+const uploadImages = multer({
+  storage: imageStorage,
+  limits: { fileSize: 8 * 1024 * 1024, files: 10 },
+});
+
+const uploadDoc = multer({
+  storage: docStorage,
+  limits: { fileSize: 12 * 1024 * 1024, files: 1 },
+});
 
 module.exports = { cloudinary, uploadImages, uploadDoc };

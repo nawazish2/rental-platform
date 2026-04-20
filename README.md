@@ -1,344 +1,236 @@
-# 🏠 RentEase — Rental Listings & Move-in Platform
+# RentEase
 
-> **Cohort 26 Buildathon · Web Dev · Problem Statement 2**
+RentEase is a full-stack MERN rental housing platform built for a college major-project setting. It covers the complete tenant journey from property discovery to visits, support, payments, and move-in operations, while also supporting owner and admin workflows.
 
-A full-stack rental housing platform built with the MERN stack — covering property discovery, visit scheduling, move-in workflows, reviews, notifications, payments, and multi-role access.
+## Why This Project Works Well For College
 
-## 🔗 Live Links
+- Solves a real-world housing and operations problem instead of basic CRUD only
+- Demonstrates full-stack development with authentication, role-based access, cloud uploads, and deployment readiness
+- Includes multiple actors: tenant, owner, and admin
+- Uses structured data models, notifications, reporting-ready documentation, and real-time updates
 
-- **Frontend**: _Add Vercel URL after deploy_
-- **Backend API**: _Add Render URL after deploy_
-- **GitHub**: _Your repo URL here_
+## Core Modules
 
----
+### Tenant
 
-## ✨ Features
+- Browse rental listings with search and filters
+- Compare up to 3 properties side by side
+- Request property visits
+- Track visit status updates
+- Save shortlisted properties
+- Manage move-in checklist, agreement, inventory, extension, and move-out request
+- Raise support tickets and review properties after visits
+- View payment records and live notifications
 
-### 🏠 Tenant Side
-- Browse 74+ listings with filters (location, budget range, type, move-in date)
-- View detailed property pages — gallery, amenities, rules, availability calendar
-- Request property visits with preferred date + notes
-- Track visit status: **Requested → Scheduled → Visited → Decision**
-- Shortlist properties and **compare 2–3 side-by-side**
-- Leave **star ratings & reviews** (visit required)
-- **Move-in checklist**: document uploads, agreement confirmation, inventory list
-- Request **stay extension** with reason
-- Request **move-out** with preferred date (admin approval flow)
-- **Support tickets** with threaded messages and categories
-- **Payment history** — rent, deposit, maintenance tracking
-- **Notification bell** — real-time updates on visit/ticket status changes
-- **Profile page** — edit name, phone, avatar
+### Owner
 
-### 🏢 Property Owner Side
-- Register as a Property Owner
-- Add/edit/delete your own listings
-- View tenant visit inquiries on your properties
-- Listings go through Admin review before publishing
+- Create and manage own property listings
+- View visit enquiries on owned properties
+- Receive notifications when listing status changes
 
-### ⚙️ Admin Side
-- Dashboard with live stats (properties, visits, tickets, move-ins)
-- **Manage Listings** — Add, publish, review, delete; status: Draft → Review → Published
-- **Manage Visits** — Update visit status, schedule dates
-- **Support Tickets** — Threaded replies, resolve tickets
-- **Move-Out Requests** — Approve or reject tenant move-out requests
+### Admin
 
----
+- View platform statistics
+- Review, publish, and manage listings
+- Manage visit requests and schedules
+- Resolve support tickets
+- Manage move-out and extension decisions
+- Create and confirm payment records
 
-## 🛠 Tech Stack
+## Tech Stack
 
-| Layer | Technology |
-|-------|-----------|
-| Frontend | React 18 + Vite + TailwindCSS |
-| Backend | Node.js + Express.js |
-| Database | MongoDB Atlas + Mongoose |
-| Auth | JWT (role-based: tenant / owner / admin) |
-| File Uploads | Cloudinary |
-| Deployment | Vercel (frontend) + Render (backend) |
+- Frontend: React 18, Vite, Tailwind CSS, React Router, Axios, Socket.IO Client
+- Backend: Node.js, Express, Mongoose, JWT, bcryptjs, Multer, Cloudinary, Socket.IO
+- Database: MongoDB Atlas / MongoDB
+- Deployment: Vercel for frontend, Render for backend
 
----
+## Architecture
 
-## 🚀 Setup Instructions
+```text
+React SPA (client)
+  -> Axios / Socket.IO
+Express API + Socket.IO server (server)
+  -> Mongoose models
+MongoDB
 
-### Prerequisites
-- Node.js 18+
-- MongoDB Atlas account
-- Cloudinary account
-
-### 1. Clone & Install
-
-```bash
-git clone <your-repo-url>
-cd rental-platform
-
-# Install backend deps
-cd server && npm install
-
-# Install frontend deps
-cd ../client && npm install
+Cloudinary
+  <- image and document uploads
 ```
 
-### 2. Backend Environment (`server/.env`)
+## Improvements Added
+
+The project was upgraded to be stronger for evaluation and viva:
+
+- Added missing schema fields such as `avatar`, `bedrooms`, `bathrooms`, `area`, and `moveInDate`
+- Added reusable backend request validation with `express-validator`
+- Added real-time notifications using Socket.IO instead of polling only
+- Added deployment-ready configuration files for Render and Vercel
+- Added proper environment templates for both frontend and backend
+- Rewrote documentation and added a college-project report with diagrams
+
+## Project Structure
+
+```text
+rental-platform/
+├── client/
+│   ├── src/
+│   │   ├── api/
+│   │   ├── components/
+│   │   ├── context/
+│   │   └── pages/
+│   ├── .env.example
+│   └── vercel.json
+├── server/
+│   ├── middleware/
+│   ├── models/
+│   ├── routes/
+│   ├── seed/
+│   ├── services/
+│   ├── utils/
+│   ├── validators/
+│   └── .env.example
+├── docs/
+├── render.yaml
+└── package.json
+```
+
+## Local Setup
+
+### 1. Install Dependencies
+
+```bash
+npm install
+npm install --prefix server
+npm install --prefix client
+```
+
+### 2. Configure Environment Variables
+
+Backend: create `server/.env`
 
 ```env
-MONGO_URI=mongodb+srv://<user>:<password>@cluster.mongodb.net/rentease
-JWT_SECRET=your_jwt_secret_here
-PORT=5001
+MONGO_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/rentease
+JWT_SECRET=replace_with_a_long_random_secret
+PORT=5000
+CLIENT_URL=http://localhost:5173
+CORS_ORIGINS=http://localhost:5173
 CLOUDINARY_CLOUD_NAME=your_cloud_name
 CLOUDINARY_API_KEY=your_api_key
 CLOUDINARY_API_SECRET=your_api_secret
 ```
 
-### 3. Frontend Environment (`client/.env`)
+Frontend: create `client/.env`
 
 ```env
-VITE_API_URL=http://localhost:5001
+VITE_API_URL=http://localhost:5000
+VITE_SOCKET_URL=http://localhost:5000
 ```
 
-### 4. Seed Demo Data
+### 3. Seed Demo Data
 
 ```bash
-cd server
-node seed/seed.js
+npm run seed
 ```
 
-Creates **74 properties** across 8 Indian cities + demo users.
-
-### 5. Run Locally
+### 4. Run The Project
 
 ```bash
-# Terminal 1 — backend
-cd server && npm run dev
-
-# Terminal 2 — frontend
-cd client && npm run dev
-```
-
----
-
-## 🔑 Demo Credentials
-
-| Role | Email | Password |
-|------|-------|----------|
-| Admin | nawazish@gmail.com | admin@macbook |
-| Tenant | tenant@demo.com | demo123 |
-| Tenant 2 | tenant2@demo.com | demo123 |
-
----
-
-## 📁 Project Structure
-
-```
-rental-platform/
-├── client/                  # React SPA (Vite + TailwindCSS)
-│   └── src/
-│       ├── pages/
-│       │   ├── Landing.jsx
-│       │   ├── Browse.jsx
-│       │   ├── PropertyDetail.jsx
-│       │   ├── Compare.jsx
-│       │   ├── TenantDashboard.jsx
-│       │   ├── MoveIn.jsx
-│       │   ├── SupportTickets.jsx
-│       │   ├── Profile.jsx
-│       │   ├── OwnerDashboard.jsx
-│       │   └── admin/
-│       │       ├── AdminDashboard.jsx
-│       │       ├── AdminListings.jsx
-│       │       ├── AdminVisits.jsx
-│       │       ├── AdminTickets.jsx
-│       │       └── AdminMoveOut.jsx
-│       ├── components/
-│       │   ├── Navbar.jsx
-│       │   ├── PropertyCard.jsx
-│       │   ├── FilterBar.jsx
-│       │   ├── StatusBadge.jsx
-│       │   ├── StarRating.jsx
-│       │   ├── NotificationBell.jsx
-│       │   ├── AvailabilityCalendar.jsx
-│       │   └── ProtectedRoute.jsx
-│       ├── context/         # AuthContext (JWT state)
-│       └── api/             # Axios instance with JWT interceptor
-└── server/                  # Express REST API
-    ├── models/              # User, Property, Visit, Shortlist, MoveIn, SupportTicket, Review, Notification, Payment
-    ├── routes/              # auth, properties, visits, shortlists, moveIn, support, reviews, notifications, payments, admin
-    ├── middleware/          # verifyToken, requireRole
-    ├── utils/               # cloudinary config
-    └── seed/                # 74-property demo seed script
-```
-
----
-
-## 📊 Database Schema
-
-**9 MongoDB collections:**
-
-| Model | Key Fields |
-|-------|-----------|
-| User | name, email, password (bcrypt), role (tenant/owner/admin), avatar |
-| Property | title, location, city, price, type, images, amenities, rules, availableFrom, blockedDates, status, createdBy |
-| Visit | property, tenant, preferredDate, scheduledDate, notes, status |
-| Shortlist | tenant, properties[] |
-| MoveIn | property, tenant, checklist (docs/agreement/inventory), extensionRequests, moveOut, status |
-| SupportTicket | property, raisedBy, subject, messages[] (threaded), category, status |
-| Review | property, tenant, rating, comment (unique per tenant+property, visit-gated) |
-| Notification | user, type, title, message, link, read |
-| Payment | tenant, property, amount, type, status, month |
-
----
-
-## 🌐 Deployment Guide
-
-### Backend → Render
-1. Go to [render.com](https://render.com) → **New → Web Service**
-2. Connect GitHub repo → Root directory: `server`
-3. Build command: `npm install`
-4. Start command: `node index.js`
-5. Add all env vars from `server/.env`
-6. After deploy → copy the Render URL
-
-### Frontend → Vercel
-1. Go to [vercel.com](https://vercel.com) → **New Project**
-2. Connect GitHub repo → Root directory: `client`
-3. Add env var: `VITE_API_URL=https://your-render-url.onrender.com`
-4. Deploy → copy the Vercel URL
-
-### Post-Deploy
-- Update this README with both live URLs
-- Run seed on production: call the seed script once with production `MONGO_URI`
-- Test all flows end-to-end on the live URL
-
-
-A full-stack rental housing platform that manages property discovery, visit scheduling, and complete move-in workflows — built with MERN stack.
-
-## 🔗 Live Links
-
-- **Frontend**: [https://rentease.vercel.app](https://rentease.vercel.app) _(update after deploy)_
-- **Backend API**: [https://rentease-api.onrender.com](https://rentease-api.onrender.com) _(update after deploy)_
-
-## ✨ Features
-
-### Tenant Side
-- Browse listings with filters (location, budget range, move-in date, type)
-- View detailed property page with image gallery, amenities, house rules, and availability timeline
-- Request property visit with preferred date and notes
-- Track visit status: **Requested → Scheduled → Visited → Decision**
-- Shortlist properties and compare 2–3 side-by-side
-
-### Operations
-- Move-in checklist with 3 steps:
-  1. **Document uploads** (Aadhar, Employment proof, etc.)
-  2. **Agreement confirmation**
-  3. **Inventory list** with item condition tracking
-- Request **stay extension** with reason
-- **Support ticket system** with threaded messages and categories
-
-### Admin Side
-- Admin dashboard with stats (listings, visits, tickets, move-ins)
-- Manage listings with status workflow: **Draft → Review → Published**
-- Update visit statuses and schedule dates
-- Reply to and resolve support tickets
-
-## 🛠 Tech Stack
-
-| Layer | Technology |
-|-------|-----------|
-| Frontend | React 18 + Vite + TailwindCSS |
-| Backend | Node.js + Express.js |
-| Database | MongoDB Atlas + Mongoose |
-| Auth | JWT (role-based: tenant/admin) |
-| File Uploads | Cloudinary |
-| Deployment | Vercel (frontend) + Render (backend) |
-
-## 🚀 Setup Instructions
-
-### Prerequisites
-- Node.js 18+
-- MongoDB Atlas account (free tier)
-- Cloudinary account (free tier)
-
-### Backend Setup
-
-```bash
-cd server
-npm install
-cp .env.example .env
-# Fill in your MONGO_URI, JWT_SECRET, CLOUDINARY credentials
 npm run dev
 ```
 
-### Frontend Setup
+This starts:
 
-```bash
-cd client
-npm install
-cp .env.example .env
-# Set VITE_API_URL=http://localhost:5000
-npm run dev
-```
+- backend on `http://localhost:5000`
+- frontend on `http://localhost:5173`
 
-### Seed Demo Data
+## Demo Credentials
 
-```bash
-cd server
-node seed/seed.js
-```
+These come from `server/seed/seed.js`.
 
-This creates:
-- 10 sample properties across Mumbai, Bangalore, Hyderabad, Delhi
-- Demo users (admin + 2 tenants)
-- Sample visits and support tickets
+- Admin: `nawazish@gmail.com` / `admin@macbook`
+- Tenant: `tenant@demo.com` / `demo123`
+- Tenant 2: `tenant2@demo.com` / `demo123`
 
-## 🔑 Demo Credentials
+## API Highlights
 
-| Role | Email | Password |
-|------|-------|----------|
-| Admin | admin@demo.com | demo123 |
-| Tenant | tenant@demo.com | demo123 |
-| Tenant 2 | tenant2@demo.com | demo123 |
+- `POST /api/auth/register` and `POST /api/auth/login`
+- `GET /api/properties` and `GET /api/properties/compare`
+- `POST /api/visits`
+- `POST /api/movein`
+- `POST /api/support`
+- `GET /api/notifications/my`
+- `POST /api/payments`
+- `GET /api/admin/stats`
 
-## 📁 Project Structure
+## Real-Time Notifications
 
-```
-rental-platform/
-├── client/          # React SPA (Vite + TailwindCSS)
-│   └── src/
-│       ├── pages/   # Landing, Browse, PropertyDetail, Compare, Dashboard, MoveIn, Support, Admin
-│       ├── components/  # Navbar, PropertyCard, FilterBar, StatusBadge, ProtectedRoute
-│       ├── context/ # AuthContext (JWT state)
-│       └── api/     # Axios instance with JWT interceptor
-└── server/          # Express REST API
-    ├── models/      # User, Property, Visit, Shortlist, MoveIn, SupportTicket
-    ├── routes/      # auth, properties, visits, shortlists, moveIn, support, admin
-    ├── middleware/  # verifyToken, requireRole
-    └── seed/        # Demo data seed script
-```
+Notifications now work in two ways:
 
-## 📊 Database Schema
+- REST endpoints for initial load and read/unread state
+- Socket.IO events for instant notification delivery after backend actions
 
-6 MongoDB collections:
+Examples of real-time updates:
 
-- **User** — name, email, password (bcrypt), role (tenant/admin)
-- **Property** — title, location, price, type, images, amenities, rules, availableFrom, status
-- **Visit** — property, tenant, preferredDate, scheduledDate, status (requested→scheduled→visited→decision_pending)
-- **Shortlist** — tenant (unique), properties array
-- **MoveIn** — property, tenant, checklist (documents, agreement, inventory), extensionRequests, status
-- **SupportTicket** — property, raisedBy, subject, messages (threaded), status
+- visit status changed by admin
+- support reply posted by admin
+- payment created or marked paid
+- extension or move-out request processed
+- property listing status changed
 
-## 🌐 Deployment
+## Deployment
 
-### Backend (Render)
-1. Create new Web Service on [render.com](https://render.com)
-2. Connect GitHub repo, set root directory to `server`
-3. Build command: `npm install` | Start command: `node index.js`
-4. Add environment variables from `.env.example`
+### Backend on Render
 
-### Frontend (Vercel)
-1. Import GitHub repo on [vercel.com](https://vercel.com)
-2. Set root directory to `client`
-3. Add `VITE_API_URL` environment variable (your Render URL)
-4. Deploy
+The repository now includes `render.yaml`. You can deploy the API from the repo root or by selecting the `server` directory.
 
-### Database (MongoDB Atlas)
-1. Create free cluster at [mongodb.com/atlas](https://mongodb.com/atlas)
-2. Get connection string → add to Render env vars as `MONGO_URI`
-3. Allow all IP addresses in Network Access (0.0.0.0/0)
+Required environment variables:
+
+- `MONGO_URI`
+- `JWT_SECRET`
+- `CLIENT_URL`
+- `CORS_ORIGINS`
+- `CLOUDINARY_CLOUD_NAME`
+- `CLOUDINARY_API_KEY`
+- `CLOUDINARY_API_SECRET`
+
+### Frontend on Vercel
+
+Set the project root to `client` and add:
+
+- `VITE_API_URL=https://your-render-backend-url`
+- `VITE_SOCKET_URL=https://your-render-backend-url`
+
+The included `client/vercel.json` handles SPA route rewrites.
+
+## Suggested Screenshots For Submission
+
+Add screenshots to your report for:
+
+- Landing page
+- Browse properties page
+- Property detail page
+- Tenant dashboard
+- Owner dashboard
+- Admin dashboard
+- Move-in workflow
+- Support tickets
+- Notification dropdown
+
+## Viva / Presentation Highlights
+
+When presenting, emphasize:
+
+- role-based authentication
+- REST API + real-time socket communication
+- cloud file upload integration
+- schema design with multiple related collections
+- modular backend with middleware, validators, and service layer
+- deployment readiness for real-world use
+
+## Next Step For Final Submission
+
+The codebase is now project-ready, but you should still do one final thing before viva:
+
+- deploy the frontend and backend using your own Vercel and Render accounts
+- capture screenshots from the live system
+- export the report in PDF after adding your name, roll number, and guide details
